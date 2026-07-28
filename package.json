@@ -1,0 +1,28 @@
+{
+  "name": "tt-batch-deploy",
+  "version": "1.0.0",
+  "description": "抖音小说 / 抖音短剧 批量上传代码和提审工具",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "tt-ide-cli",
+    "抖音小程序",
+    "头条小程序",
+    "批量上传",
+    "批量提审"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "tt-ide-cli": "^0.1.33",
+    "dayjs": "^1.11.10",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "commander": "^11.1.0"
+  }
+}
