@@ -1,7 +1,7 @@
 {
-  "name": "tt-batch-deploy",
+  "name": "douyin-miniapp-deploy",
   "version": "1.0.0",
-  "description": "抖音小说 / 抖音短剧 批量上传代码和提审工具",
+  "description": "抖音小程序批量上传代码和提审工具",
   "main": "index.js",
   "engines": {
     "node": ">=18.0.0"
@@ -10,9 +10,9 @@
     "start": "node index.js"
   },
   "keywords": [
+    "douyin-miniapp-deploy",
     "tt-ide-cli",
     "抖音小程序",
-    "头条小程序",
     "批量上传",
     "批量提审"
   ],

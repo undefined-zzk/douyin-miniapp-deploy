@@ -1,5 +1,5 @@
 /**
- * 提审模块 - 核心函数
+ * douyin-miniapp-deploy 提审模块 - 核心函数
  * 统一由 index.js 调用
  */
 const fs = require('fs');

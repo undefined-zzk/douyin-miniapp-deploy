@@ -1,6 +1,6 @@
-# 抖音小程序批量部署工具
+# douyin-miniapp-deploy
 
-基于 `tt-ide-cli` 封装的抖音小程序批量上传代码和提审工具，支持交互式命令行操作。适用于多类型、多小程序的批量管理。
+抖音小程序批量上传代码和提审工具，基于 `tt-ide-cli` 封装，支持交互式命令行操作。适用于多类型、多小程序的批量管理。
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-green.svg)](package.json)
@@ -17,7 +17,7 @@
 ```bash
 # 克隆项目
 git clone <repo-url>
-cd tt-ide-cli-js
+cd douyin-miniapp-deploy
 
 # 安装依赖
 npm install
@@ -117,12 +117,11 @@ npm start
 ## 项目结构
 
 ```
-tt-ide-cli-js/
+douyin-miniapp-deploy/
 ├── config.example.js  # 配置文件模板（复制为 config.js 后使用）
 ├── index.js           # 主入口，交互式菜单
 ├── upload.js          # 上传模块
 ├── audit.js           # 提审模块
-├── fetch-apps.js      # 获取小程序信息工具
 ├── package.json
 ├── .gitignore
 ├── LICENSE
