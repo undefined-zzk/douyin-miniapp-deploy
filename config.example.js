@@ -35,8 +35,8 @@ const TYPES = {
 // ==================== 项目路径映射 ====================
 // key 必须与 TYPES 中的 key 一致
 const PROJECT_PATHS = {
-  novel: "D:\\hys-project\\novel-tt-native",
-  skit: "D:\\hys-project\\tiktok-skit-applet",
+  novel: "/path/to/novel-tt-native",       // macOS 示例，Windows 用 "D:\\path\\to\\novel-tt-native"
+  skit:  "/path/to/tiktok-skit-applet",
 };
 
 // ==================== 宿主应用列表 ====================
