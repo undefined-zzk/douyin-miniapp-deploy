@@ -186,27 +186,61 @@ function showConfigSummary() {
 }
 
 // ==================== 登录态检测 ====================
+/**
+ * 带超时的 checkSession 封装
+ * @param {number} timeoutMs 超时毫秒数，默认 30 秒
+ */
+function checkSessionWithTimeout(timeoutMs = 30000) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve({ loggedIn: false, errMsg: `检测超时（${timeoutMs / 1000}秒），请检查抖音开发者工具是否正常运行` });
+    }, timeoutMs);
+    tma.checkSession()
+      .then((session) => {
+        clearTimeout(timer);
+        if (session.isValid) {
+          resolve({ loggedIn: true, username: session.username });
+        } else {
+          resolve({ loggedIn: false, errMsg: session.errMsg || '未登录' });
+        }
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        resolve({ loggedIn: false, errMsg: error.message });
+      });
+  });
+}
+
 async function checkLoginStatus() {
+  return checkSessionWithTimeout();
+}
+
+// ==================== 退出登录 ====================
+async function doLogout() {
+  const { execSync } = require('child_process');
   try {
-    const session = await tma.checkSession();
-    if (session.isValid) {
-      return { loggedIn: true, username: session.username };
-    }
-    return { loggedIn: false, errMsg: session.errMsg || '未登录' };
+    console.log(chalk.gray('\n正在退出登录...'));
+    execSync('npx tma logout', { stdio: 'inherit', cwd: __dirname });
+    console.log(chalk.green('\n  ✅ 已成功退出登录\n'));
+    return true;
   } catch (error) {
-    return { loggedIn: false, errMsg: error.message };
+    console.log(chalk.red(`\n  ❌ 退出登录失败: ${error.message}\n`));
+    return false;
   }
 }
 
-async function ensureLoggedIn() {
-  const status = await checkLoginStatus();
+async function ensureLoggedIn(skipCheck = false) {
+  if (!skipCheck) {
+    console.log(chalk.gray('🔍 正在检测登录状态...'));
+    const status = await checkLoginStatus();
 
-  if (status.loggedIn) {
-    console.log(chalk.gray(`  ✅ 已登录 (${status.username})\n`));
-    return true;
+    if (status.loggedIn) {
+      console.log(chalk.gray(`  ✅ 已登录 (${status.username})\n`));
+      return 'loggedIn';
+    }
+
+    console.log(chalk.yellow(`  ⚠️  ${status.errMsg || '未检测到登录态'}，需要先登录\n`));
   }
-
-  console.log(chalk.yellow(`  ⚠️  ${status.errMsg || '未检测到登录态'}，需要先登录\n`));
 
   const { doLogin } = await inquirer.prompt([
     {
@@ -218,7 +252,7 @@ async function ensureLoggedIn() {
   ]);
 
   if (!doLogin) {
-    return false;
+    return 'cancelled';
   }
 
   // 调用 tma login 进行交互式登录
@@ -230,13 +264,13 @@ async function ensureLoggedIn() {
     const retryStatus = await checkLoginStatus();
     if (retryStatus.loggedIn) {
       console.log(chalk.green(`\n  ✅ 登录成功 (${retryStatus.username})\n`));
-      return true;
+      return 'loggedIn';
     }
     console.log(chalk.red('\n  ❌ 登录失败，请重试\n'));
-    return false;
+    return 'failed';
   } catch {
     console.log(chalk.red('\n  ❌ 登录失败，请重试\n'));
-    return false;
+    return 'failed';
   }
 }
 
@@ -267,55 +301,78 @@ async function mainMenu() {
   }
 
   // 自动检测登录态
-  const loggedIn = await ensureLoggedIn();
-  if (!loggedIn) {
+  let loginState = await ensureLoggedIn();
+  if (loginState === 'cancelled' || loginState === 'failed') {
     console.log(chalk.yellow('未登录，无法继续。\n'));
     process.exit(0);
   }
 
-  const { action } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'action',
-      message: '请选择要执行的操作：',
-      choices: [
-        { name: '📦 上传代码', value: 'upload' },
-        { name: '🔍 提交审核', value: 'audit' },
-        { name: '🚀 一键上传+提审', value: 'all' },
-        { name: '❌ 退出', value: 'exit' },
-      ],
-    },
-  ]);
+  // 主菜单循环
+  while (true) {
+    const choices = [
+      { name: '📦 上传代码', value: 'upload' },
+      { name: '🔍 提交审核', value: 'audit' },
+      { name: '🚀 一键上传+提审', value: 'all' },
+      { name: '🚪 退出登录', value: 'logout' },
+      { name: '❌ 退出程序', value: 'exit' },
+    ];
 
-  switch (action) {
-    case 'upload':
-      await uploadFlow();
-      break;
-    case 'audit':
-      await auditFlow();
-      break;
-    case 'all':
-      await oneClickDeploy();
-      break;
-    case 'exit':
+    const { action } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'action',
+        message: '请选择要执行的操作：',
+        choices,
+      },
+    ]);
+
+    if (action === 'exit') {
       console.log(chalk.gray('\n👋 再见！\n'));
       process.exit(0);
-  }
+    }
 
-  const { again } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'again',
-      message: '是否返回主菜单？',
-      default: true,
-    },
-  ]);
+    if (action === 'logout') {
+      const { confirm } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: '确定要退出登录吗？退出后需要重新登录才能继续操作。',
+          default: false,
+        },
+      ]);
+      if (confirm) {
+        await doLogout();
+        // logout 后直接引导登录，跳过 checkSession（logout 后 session 可能有缓存延迟）
+        loginState = await ensureLoggedIn(true);
+        if (loginState !== 'loggedIn') {
+          console.log(chalk.yellow('未登录，无法继续。\n'));
+          process.exit(0);
+        }
+      }
+      continue;
+    }
 
-  if (again) {
-    await mainMenu();
-  } else {
-    console.log(chalk.gray('\n👋 再见！\n'));
-    process.exit(0);
+    if (action === 'upload') {
+      await uploadFlow();
+    } else if (action === 'audit') {
+      await auditFlow();
+    } else if (action === 'all') {
+      await oneClickDeploy();
+    }
+
+    const { again } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'again',
+        message: '是否返回主菜单？',
+        default: true,
+      },
+    ]);
+
+    if (!again) {
+      console.log(chalk.gray('\n👋 再见！\n'));
+      process.exit(0);
+    }
   }
 }
 
