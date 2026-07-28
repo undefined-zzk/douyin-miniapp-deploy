@@ -123,6 +123,7 @@ douyin-miniapp-deploy/
 ├── index.js           # 主入口，交互式菜单
 ├── upload.js          # 上传模块
 ├── audit.js           # 提审模块
+├── common.js          # 公共工具模块
 ├── package.json
 ├── .gitignore
 ├── LICENSE
