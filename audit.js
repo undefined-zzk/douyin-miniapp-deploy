@@ -2,45 +2,12 @@
  * douyin-miniapp-deploy 提审模块 - 核心函数
  * 统一由 index.js 调用
  */
-const fs = require('fs');
 const tma = require('tt-ide-cli');
 const path = require('path');
 const chalk = require('chalk');
 const ora = require('ora');
 const config = require('./config');
-
-/**
- * 根据 config.js 的 appid 自动同步到项目 project.config.json
- */
-function syncProjectAppid(appConfig) {
-  const projectPath = config.PROJECT_PATHS[appConfig.type];
-  const configFile = path.join(projectPath, 'project.config.json');
-
-  if (!fs.existsSync(configFile)) return { original: null, synced: false };
-
-  const raw = fs.readFileSync(configFile, 'utf-8');
-  const projectConfig = JSON.parse(raw);
-  const original = projectConfig.appid;
-
-  if (projectConfig.appid === appConfig.appid) return { original, synced: false };
-
-  projectConfig.appid = appConfig.appid;
-  fs.writeFileSync(configFile, JSON.stringify(projectConfig, null, 4));
-  console.log(chalk.gray(`  🔄 已同步 project.config.json appid: ${original} → ${appConfig.appid}`));
-  return { original, synced: true };
-}
-
-function restoreProjectAppid(appConfig, original) {
-  if (original === null) return;
-  const projectPath = config.PROJECT_PATHS[appConfig.type];
-  const configFile = path.join(projectPath, 'project.config.json');
-  const raw = fs.readFileSync(configFile, 'utf-8');
-  const projectConfig = JSON.parse(raw);
-  if (projectConfig.appid !== original) {
-    projectConfig.appid = original;
-    fs.writeFileSync(configFile, JSON.stringify(projectConfig, null, 4));
-  }
-}
+const { syncProjectAppid, restoreProjectAppid } = require('./common');
 
 /**
  * 提审单个小程序

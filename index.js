@@ -10,7 +10,21 @@
 const tma = require('tt-ide-cli');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const config = require('./config');
+
+let config;
+try {
+  config = require('./config');
+} catch (err) {
+  if (err.code === 'MODULE_NOT_FOUND') {
+    console.error(chalk.red.bold('\n❌ 未找到 config.js，请先创建配置文件：\n'));
+    console.error(chalk.yellow('   cp config.example.js config.js'));
+    console.error(chalk.yellow('   然后编辑 config.js，填入你的项目路径和小程序信息\n'));
+  } else {
+    console.error(chalk.red.bold(`\n❌ config.js 加载失败: ${err.message}\n`));
+  }
+  process.exit(1);
+}
+
 const { batchUpload } = require('./upload');
 const { batchAudit } = require('./audit');
 
@@ -103,6 +117,7 @@ function validateConfig() {
 
 // ==================== 获取已启用的小程序 ====================
 function getEnabledApps() {
+  if (!config || !config.apps || !Array.isArray(config.apps)) return [];
   return config.apps.filter(a => a.enabled !== false);
 }
 

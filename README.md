@@ -53,8 +53,8 @@ const TYPES = {
 
 ```js
 const PROJECT_PATHS = {
-  novel: "D:\\hys-project\\novel-tt-native",
-  skit:  "D:\\hys-project\\tiktok-skit-applet",
+  novel: "/path/to/novel-tt-native",
+  skit:  "/path/to/tiktok-skit-applet",
 };
 ```
 
