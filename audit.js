@@ -45,16 +45,24 @@ async function auditApp(appConfig, auditOptions = {}) {
 
     return { success: true, appConfig };
   } catch (error) {
-    // tt-ide-cli 在提审成功时也可能抛出 error.message === "ok"，视为成功
-    if (error.message === 'ok') {
+    // tt-ide-cli 在成功时抛出 { error: 0, err_tips: "ok" } 而非正常 resolve
+    // 同时兼容 error 为纯字符串 "ok" 或带 message 属性为 "ok" 的情况
+    const isSuccess =
+      (error && error.error === 0) ||
+      (error && error.err_tips === 'ok') ||
+      error === 'ok' || error === 'OK' ||
+      (error && error.message && String(error.message).trim() === 'ok');
+
+    if (isSuccess) {
       spinner.succeed(chalk.green(`✅「${appConfig.name}」提审成功！`));
       console.log(chalk.gray(`   AppID: ${appConfig.appid}`));
       return { success: true, appConfig };
     }
 
+    const errMsg = (error && error.err_tips) || (error && error.message) || String(error);
     spinner.fail(chalk.red(`❌「${appConfig.name}」提审失败`));
-    console.error(chalk.red(`   错误信息: ${error.message}`));
-    return { success: false, appConfig, error: error.message };
+    console.error(chalk.red(`   错误信息: ${errMsg}`));
+    return { success: false, appConfig, error: errMsg };
   } finally {
     restoreProjectAppid(appConfig, original);
   }
