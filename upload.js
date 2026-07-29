@@ -49,6 +49,12 @@ async function uploadApp(appConfig, version, changeLog) {
 
     return { success: true, appConfig, result };
   } catch (error) {
+    // tt-ide-cli 在操作成功时也可能抛出 error.message === "ok"，视为成功
+    if (error.message === 'ok') {
+      spinner.succeed(chalk.green(`✅「${appConfig.name}」上传成功！`));
+      return { success: true, appConfig };
+    }
+
     spinner.fail(chalk.red(`❌「${appConfig.name}」上传失败`));
     console.error(chalk.red(`   错误信息: ${error.message}`));
     return { success: false, appConfig, error: error.message };
